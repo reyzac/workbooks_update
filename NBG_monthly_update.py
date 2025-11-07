@@ -92,6 +92,54 @@ def select_workbooks():
     WB6_file = select_file("Select WB6 file")
     return WB2_file, WB4_file, WB5_file, WB6_file
 
+def normalize_columns(df):
+    df = df.rename(columns=lambda col: re.sub(r'[^a-zA-Z0-9 ]', '', col).strip().lower())
+    df = df.rename(columns=lambda col: re.sub(r' {2,}', ' ', col))
+    return df
+
+def check_masterlist(wb2, WB2_file):
+    hist_sales_2023 = wb2.sheets['2023'].range("A3").options(pd.DataFrame, header=1, index=False, expand='table').value
+    hist_sales_2024 = wb2.sheets['2024'].range("A3").options(pd.DataFrame, header=1, index=False, expand='table').value
+    hist_sales_2025 = wb2.sheets['2025'].range("A3").options(pd.DataFrame, header=1, index=False, expand='table').value
+    print(f"\ndone saving hist sales to dataframes")
+
+    #Get the Last closed month in channel setup tab
+    last_closed_month = str(wb2.sheets['Channel Setup'].range("K17").value)
+    print(f"\nLast Closed Month: {last_closed_month}")
+
+    #Get the Master list in masterlist tab as dataframe
+    masterlist = wb2.sheets['Master List'].range("C1:E202").options(pd.DataFrame, header=1, index=False).value
+    masterlist = masterlist.drop(index=0).reset_index(drop=True)
+
+    #Remove non AlphaNumeric characters in the headers to avoid UTF-8 errors
+    hist_sales_2023 = normalize_columns(hist_sales_2023)
+    hist_sales_2024 = normalize_columns(hist_sales_2024)
+    hist_sales_2025 = normalize_columns(hist_sales_2025)
+    print(f"\nDone normalizing hist sales dataframes")
+
+    #Combine all hist sales data frames
+    hist_sales_all = pd.concat([hist_sales_2023, hist_sales_2024, hist_sales_2025], ignore_index=True)
+    print(f"\nDone combining all hist sales dataframes")
+
+    #Pivot historical sales by date to get the total units sold per month
+    hist_sales_all_grouped = hist_sales_all.groupby("date", as_index=False)["total units ordered"].sum()
+    #print(f"\nDone grouping hist sales by date with total sales")
+
+    #Get the unique asins with sales from wb2
+    unique_asins_sold = hist_sales_all.groupby("child asin", as_index=False)["total units ordered"].sum()
+    unique_asins_sold = unique_asins_sold[unique_asins_sold["total units ordered"] > 0]
+        
+    #Determine if there are any unique asins with sales that are not in masterlist
+    not_in_masterlist = set(unique_asins_sold["child asin"]) - set(masterlist["Child ASIN"])
+    print(f"\nThese ASINs have sales but not in masterlist: {not_in_masterlist}")
+      
+    if not_in_masterlist:
+        new_asins = unique_asins_sold[unique_asins_sold["child asin"].isin(not_in_masterlist)]
+        save_to = os.path.dirname(WB2_file)
+        save_to = os.path.join(save_to, "output", "new_asins.csv")
+        new_asins.to_csv(save_to, index=False)
+
+
 def main():
     timestamp = datetime.datetime.now().strftime("_%H%M%S_%m.%d.%Y")
 
@@ -164,7 +212,8 @@ def main():
         
     
         #Call the select workbooks function
-        WB2_file, WB4_file, WB5_file, WB6_file = select_workbooks()
+        WB2_file = select_file("Select WB2 file that is UPDATED or from OUTPUT folder!!")
+        
         WB2_folder = os.path.dirname(WB2_file)
 
         print(WB2_file)
@@ -204,10 +253,17 @@ def main():
         except Exception as e:
             print(f"\n Unable to save WB2 file: {e}")
 
+        #check masterlist for new asins with sales
+        try:
+            check_masterlist(wb2, WB2_file)
+        except Exception as e:
+            print(f"\n Error encountered checking masterlist: {e}")
+            
         what_to_do = input(f"\nProceed to roll over?\n1. No\n2. Yes\nWhat is your choice? ")
 
     if what_to_do == "2":
         #Call the select workbooks function
+        WB2_file, WB4_file, WB5_file, WB6_file = select_workbooks()
         if WB4_file:
             print(f"\nWorkbook files already selected")
         else:
@@ -288,7 +344,8 @@ def main():
         try:
             message = "IN WB5: what sheet is import?"
             print(f"\n{message} {wb5_import}")
-            target_sheet = wb5.sheets[list_all_sheets(wb5, message)]
+            #target_sheet = wb5.sheets[list_all_sheets(wb5, message)]
+            target_sheet = wb5.sheets[wb5_import]
             target_sheet.range('A1').value = source_sheet.used_range.value
         except Exception as e:
             print(f"\nWB5 sheet or range access failed: {e}\n")
@@ -347,7 +404,8 @@ def main():
         try:
             message = "IN WB6: what sheet is import?"
             print(f"\n{message} {wb6_import}")
-            target_sheet = wb6.sheets[list_all_sheets(wb6, message)]
+            #target_sheet = wb6.sheets[list_all_sheets(wb6, message)]
+            target_sheet = wb6.sheets[wb6_import]
             target_sheet.range('A1').value = source_sheet.used_range.value
         except Exception as e:
             print(f"\nWB6 sheet or range access failed: {e}\n")

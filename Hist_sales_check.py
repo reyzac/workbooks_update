@@ -17,8 +17,8 @@ import shutil, tempfile
 from pathlib import Path
 
 def select_file(title):
-    root = tk.Tk() #This creates a root window object essentially the main GUI window.Even though you won’t display it, it’s required to initialize the GUI environment.
-    root.withdraw() #This hides the root window so it doesn’t pop up awkwardly.
+    root = tk.Tk() #This creates a root window object essentially the main GUI window.Even though you wonï¿½t display it, itï¿½s required to initialize the GUI environment.
+    root.withdraw() #This hides the root window so it doesnï¿½t pop up awkwardly.
     file_path = filedialog.askopenfilename(filetypes=[("Excel Binary Workbook", "*.xlsb")], title=title)
     return file_path
 
@@ -111,7 +111,7 @@ def main():
             continue_checking = input(f"\nContinue checking?\n1. Yes\n2. No\nWhat is your choice? ")
 
             if continue_checking != "1":
-                wb2.close()
+                #wb2.close()
                 app.quit()
                 exit()
             elif continue_checking == "1":
@@ -203,8 +203,9 @@ def main():
         print(f"\nWB4\n{wb4_hist_sales.dtypes}")
         print(f"\nWB5\n{wb5_hist_sales.dtypes}")
         print(f"\nWB6\n{wb6_hist_sales.dtypes}")
-        
+        '''
 
+        '''
         #print the data frames
         print(f"\nWB2\n{wb2_hist_sales}")
         print(f"\nWB4\n{wb4_hist_sales}")
