@@ -145,8 +145,8 @@ def main():
 
     what_to_do = input(f"\nSelect what to do:\n1. Update WB2\n2. Just Rollover WB2\nWhat is your choice? ")
 
-    wb2_monthly_update = "2025_10_US"
-    wb2_date = "10/25/2025"
+    wb2_monthly_update = "2025_11_US"
+    wb2_date = "11/25/2025"
     wb2_export = "Export to Customer Forecasting"
     wb4_import = "Import Product Sales (WB2)"
     decision = input(f"\nSelect workbook:\n4. WB4\n5. WB5\nWhat workbook to paste in WB6? : ")
