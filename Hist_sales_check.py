@@ -39,7 +39,7 @@ def unprotect_sheet(workbook, sheet_name):
     if target_sheet.api.ProtectContents:
         target_sheet.api.Unprotect(Password="bigmoney")
 
-def main():
+def start_check():
     timestamp = datetime.datetime.now().strftime("_%Y-%m-%d")
     try:
         #Select WB2, WB4, WB5 and WB6 files from file browswer
@@ -256,7 +256,7 @@ def main():
         wb5.close()
         wb6.close()
         app.quit()
-main()
+#main()
 '''
         #
         #

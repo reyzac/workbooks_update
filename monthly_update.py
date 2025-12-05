@@ -14,6 +14,7 @@ import shutil, tempfile
 from pathlib import Path
 import time
 import ctypes
+from Hist_sales_check import start_check, unprotect_sheet
 
 def normalize_columns(df):
     df = df.rename(columns=lambda col: re.sub(r'[^a-zA-Z0-9 ]', '', col).strip().lower())
@@ -429,6 +430,7 @@ def main():
             wb5.close()
     
         print(f"\nROLLOVER Done. You are so very very very brightest of the world, hello world!\n")
+        start_check()
         app.quit()
 
     elif what_to_do == "1":
